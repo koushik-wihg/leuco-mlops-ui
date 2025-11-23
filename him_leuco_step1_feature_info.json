@@ -1,0 +1,77 @@
+{
+  "MAJOR_COLS": [
+    "SiO2",
+    "TiO2",
+    "Al2O3",
+    "Fe2O3",
+    "FeO",
+    "MgO",
+    "CaO",
+    "Na2O",
+    "K2O",
+    "P2O5",
+    "MnO",
+    "LOI"
+  ],
+  "ILR_FEATURES": [
+    "ilr_SiO2_vs_rest",
+    "ilr_TiO2_vs_rest",
+    "ilr_Al2O3_vs_rest",
+    "ilr_Fe2O3_vs_rest",
+    "ilr_FeO_vs_rest",
+    "ilr_MgO_vs_rest",
+    "ilr_CaO_vs_rest",
+    "ilr_Na2O_vs_rest",
+    "ilr_K2O_vs_rest",
+    "ilr_P2O5_vs_rest",
+    "ilr_MnO_vs_rest"
+  ],
+  "TRACE_FEATURES": [
+    "Rb",
+    "Cs",
+    "Be",
+    "Ta",
+    "Nb",
+    "Sn",
+    "W",
+    "Ba",
+    "Sr",
+    "Y",
+    "Zr",
+    "Hf",
+    "Th",
+    "U"
+  ],
+  "REE_FEATURES": [
+    "La",
+    "Ce",
+    "Pr",
+    "Nd",
+    "Sm",
+    "Eu",
+    "Gd",
+    "Tb",
+    "Dy",
+    "Ho",
+    "Er",
+    "Tm",
+    "Yb",
+    "Lu"
+  ],
+  "RATIO_FEATURES": [
+    "Rb_Sr",
+    "Ta_Nb",
+    "Rb_Cs",
+    "La_Yb",
+    "Ce_Yb",
+    "Sn_W"
+  ],
+  "META_COLS": [
+    "Source_Sheet"
+  ],
+  "TARGET_COLS": [
+    "Li",
+    "Li_Class",
+    "Li_Label"
+  ]
+}

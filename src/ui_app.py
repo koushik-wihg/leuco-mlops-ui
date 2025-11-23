@@ -27,12 +27,16 @@ st.sidebar.success(f"API Target: {API_ENDPOINT}")
 # -------------------------------------------------------------------
 # Global Constants
 # -------------------------------------------------------------------
-# Define Class Mapping (Matches expected API output labels)
+# Ensure this block uses standard 4-space indentation
 CLASS_MAPPING = {
     0: "Poor (0)",
     1: "Moderate (1)",
     2: "Enriched (2)"
 }
+
+# Define the expected columns based on your API schema (excluding LOI and Li, which are handled/dropped)
+EXPECTED_PREDICTION_FEATURES = ['SiO2', 'TiO2', 'Al2O3', 'Fe2O3', 'FeO', 'MgO', 'CaO', 'Na2O', 'K2O', 'P2O5', 'MnO', 'Rb', 'Cs', 'Be', 'Ta', 'Nb', 'Sn', 'W', 'Ba', 'Sr', 'Y', 'Zr', 'Hf', 'Th', 'U', 'La', 'Ce', 'Pr', 'Nd', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu']
+
 
 # -------------------------------------------------------------------
 # Helper Function for API Communication
@@ -98,7 +102,7 @@ with col1:
     if uploaded_files and st.button("Predict Uploaded Files via API"):
         
         if API_ENDPOINT == "http://127.0.0.1:8000/predict" and not Path(API_ENDPOINT).exists():
-             st.warning("Using default local API endpoint. Ensure your service is running!")
+            st.warning("Using default local API endpoint. Ensure your service is running!")
 
         for uploaded_file in uploaded_files:
             st.markdown(f"### File: {uploaded_file.name}")
@@ -108,6 +112,17 @@ with col1:
             except Exception as e:
                 st.error(f"Failed to read {uploaded_file.name}: {e}")
                 continue
+
+            # --- FRIENDLY WARNINGS FOR MISSING/IGNORED COLUMNS ---
+            missing_cols = [col for col in EXPECTED_PREDICTION_FEATURES if col not in df_raw.columns]
+            ignored_cols = [col for col in ['LOI', 'Li'] if col in df_raw.columns]
+
+            if missing_cols:
+                st.warning(f"⚠️ Warning: File is missing critical features: **{', '.join(missing_cols[:4])}** and {len(missing_cols) - 4} others. Missing data will be treated as zero by the API.")
+            
+            if ignored_cols:
+                st.info(f"ℹ️ Note: Columns **{', '.join(ignored_cols)}** are present but will be automatically excluded by the API.")
+            # --- END FRIENDLY WARNINGS ---
 
             try:
                 # --- CALL THE API ---
@@ -137,7 +152,7 @@ with col1:
                     st.success("Prediction completed via API.")
 
                 elif api_result:
-                     st.error("API response was successful but did not contain the expected 'predictions' key.")
+                    st.error("API response was successful but did not contain the expected 'predictions' key.")
 
             except Exception as e:
                 st.error(f"Prediction failed for {uploaded_file.name}")
@@ -164,7 +179,7 @@ with col2:
     if st.button("Predict single sample via API"):
         
         if API_ENDPOINT == "http://127.0.0.1:8000/predict" and not Path(API_ENDPOINT).exists():
-             st.warning("Using default local API endpoint. Ensure your service is running!")
+            st.warning("Using default local API endpoint. Ensure your service is running!")
              
         sample_df_raw = None
         try:

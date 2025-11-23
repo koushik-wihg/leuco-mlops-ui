@@ -1,0 +1,26 @@
+base:
+  target_column: "Li_Class"
+data_ingestion:
+  source_path: "data/raw/sample_input.csv"
+  output_file: "data/raw/ingested.csv"
+  test_size: 0.2
+  random_state: 42
+data_processing:
+  passthrough_features:
+    - "Sample"
+    - "Source_Sheet"
+  impute_strategy: "median"
+  pca_variance_threshold: 0.95
+model_trainer:
+  n_trials: 20
+  xgb_default:
+    eval_metric: "mlogloss"
+model_evaluation:
+  min_importance_threshold: 0.01
+  confusion_matrix_path: "reports/confusion_matrix.png"
+  final_metrics_path: "metrics/final_metrics.json"
+api:
+  model_path: "models/final_pipeline.joblib"
+ui:
+  default_sample_csv: "data/raw/sample_input.csv"
+
