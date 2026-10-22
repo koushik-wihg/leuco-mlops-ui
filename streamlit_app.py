@@ -52,10 +52,15 @@ CLASS_LABELS = {0: "Li-poor (<300 ppm)", 1: "Li-moderate (300-1000 ppm)", 2: "Li
 CLASS_COLORS = {0: "#1f77b4", 1: "#ff7f0e", 2: "#d62728"}
 
 # -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # HELPER FUNCTIONS
 # -----------------------------------------------------------------------------
 def clean_col_name(c):
-    return re.sub(r'[\(_].*?[\)]?', '', str(c)).strip()
+    # Strip parenthetical or bracketed units, e.g. (wt%), [ppm], {ppm}
+    s = re.sub(r'[\(\[\{].*?[\)\]\}]', '', str(c))
+    # Strip unit suffixes, e.g. _pct, _ppm, _wt, /wt%
+    s = re.sub(r'[_/](wt|pct|percent|ppm|ppb|wt%|%).*$', '', s, flags=re.IGNORECASE)
+    return s.strip()
 
 def find_col(target_regex, cols):
     for c in cols:
