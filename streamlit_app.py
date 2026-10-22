@@ -31,16 +31,16 @@ CODA_OXIDES = ['SiO2', 'Al2O3', 'K2O', 'Na2O', 'CaO', 'Fe2O3T', 'MgO', 'MnO', 'T
 
 # Orthonormal Sequential Binary Partition (SBP) Matrix
 SBP_DICT = {
-    'SiO2':    [+1, +1,  0,  0,  0,  0,  0,  0,  0],
-    'Al2O3':   [+1, -1, +1,  0,  0,  0,  0,  0,  0],
-    'K2O':     [+1, -1, -1, +1,  0,  0,  0,  0,  0],
-    'Na2O':    [+1, -1, -1, -1,  0,  0,  0,  0,  0],
-    'CaO':     [-1,  0,  0,  0, +1, +1,  0,  0,  0],
-    'Fe2O3T':  [-1,  0,  0,  0, +1, -1, +1,  0,  0],
-    'MgO':     [-1,  0,  0,  0, +1, -1, -1, +1,  0],
-    'MnO':     [-1,  0,  0,  0, +1, -1, -1, -1,  0],
-    'TiO2':    [-1,  0,  0,  0, -1,  0,  0,  0, +1],
-    'P2O5':    [-1,  0,  0,  0, -1,  0,  0,  0, -1]
+    'SiO2':   [+1, +1,  0,  0,  0,  0,  0,  0,  0],
+    'Al2O3':  [+1, -1, +1,  0,  0,  0,  0,  0,  0],
+    'K2O':    [+1, -1, -1, +1,  0,  0,  0,  0,  0],
+    'Na2O':   [+1, -1, -1, -1,  0,  0,  0,  0,  0],
+    'CaO':    [-1,  0,  0,  0, +1, +1,  0,  0,  0],
+    'Fe2O3T': [-1,  0,  0,  0, +1, -1, +1,  0,  0],
+    'MgO':    [-1,  0,  0,  0, +1, -1, -1, +1,  0],
+    'MnO':    [-1,  0,  0,  0, +1, -1, -1, -1,  0],
+    'TiO2':   [-1,  0,  0,  0, -1,  0,  0,  0, +1],
+    'P2O5':   [-1,  0,  0,  0, -1,  0,  0,  0, -1]
 }
 SBP_DF = pd.DataFrame(SBP_DICT, index=[f"ILR_z{i+1}" for i in range(9)])
 
@@ -89,6 +89,15 @@ def load_artifacts():
     try:
         model = joblib.load("best_model_step2_xgb.joblib")
         imputer = joblib.load("preprocessor_imputer.joblib")
+
+        # Cross-version scikit-learn attribute compatibility patch
+        if hasattr(imputer, "statistics_"):
+            stat_dtype = getattr(imputer.statistics_, "dtype", np.dtype(np.float64))
+            if not hasattr(imputer, "_fill_dtype"):
+                imputer._fill_dtype = stat_dtype
+            if not hasattr(imputer, "_fit_dtype"):
+                imputer._fit_dtype = stat_dtype
+
         return model, imputer, None
     except Exception as e:
         return None, None, str(e)
@@ -180,7 +189,15 @@ if uploaded_file is not None:
         if err or model is None:
             st.error(f"Model artifact error: {err}. Please ensure 'best_model_step2_xgb.joblib' and 'preprocessor_imputer.joblib' are present.")
         else:
-            X_imp = pd.DataFrame(imputer.transform(X_mat), columns=MODEL_FEATURES)
+            # Resilient imputation handling
+            try:
+                X_imp = pd.DataFrame(imputer.transform(X_mat), columns=MODEL_FEATURES)
+            except Exception:
+                X_arr = np.array(X_mat, dtype=float)
+                stats = getattr(imputer, "statistics_", np.zeros(len(MODEL_FEATURES)))
+                X_imputed_arr = np.where(np.isnan(X_arr), stats, X_arr)
+                X_imp = pd.DataFrame(X_imputed_arr, columns=MODEL_FEATURES)
+
             probs = model.predict_proba(X_imp)
             
             if "Bayesian" in decision_mode:
@@ -208,9 +225,9 @@ if uploaded_file is not None:
             st.markdown("### 📊 Screening Summary")
             c1, c2, c3, c4 = st.columns(4)
             c1.metric("Total Analyzed", len(df_upload))
-            c2.metric("Li-poor Targets", (preds == 0).sum())
-            c3.metric("Li-moderate Targets", (preds == 1).sum())
-            c4.metric("Li-enriched Targets", (preds == 2).sum())
+            c2.metric("Li-poor Targets", int((preds == 0).sum()))
+            c3.metric("Li-moderate Targets", int((preds == 1).sum()))
+            c4.metric("Li-enriched Targets", int((preds == 2).sum()))
             
             # -----------------------------------------------------------------
             # TERNARY PROBABILITY VISUALIZATION
